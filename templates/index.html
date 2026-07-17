@@ -327,14 +327,6 @@
     </div>
 </div>
 
-<script>
-document.querySelectorAll('[data-bs-toggle="collapse"]').forEach(header => {
-    header.addEventListener('click', () => {
-        const target = document.querySelector(header.dataset.bsTarget);
-        if (target) { target.classList.toggle('show'); header.classList.toggle('collapsed'); }
-    });
-});
-</script>
 <script src="https://cdn.plyr.io/3.7.8/plyr.polyfilled.js"></script>
 <script src="/static/filemanager.js"></script>
 <script src="/static/script.js"></script>
