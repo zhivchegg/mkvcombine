@@ -5,40 +5,65 @@
       <stop offset="100%" style="stop-color:#F97316"/>
     </linearGradient>
   </defs>
-  <!-- Rounded square background -->
-  <rect width="512" height="512" rx="96" fill="url(#bg)"/>
-  <!-- Film strip left -->
+  <!-- Background -->
+  <rect width="512" height="512" rx="108" fill="url(#bg)"/>
+
+  <!-- Film strip background -->
+  <g fill="none" stroke="#fff" stroke-width="16" opacity="0.25">
+    <rect x="80" y="30" width="352" height="452" rx="14"/>
+  </g>
+  <!-- Film perforations left -->
+  <g fill="#fff" opacity="0.25">
+    <rect x="90" y="50" width="40" height="48" rx="7"/>
+    <rect x="90" y="118" width="40" height="48" rx="7"/>
+    <rect x="90" y="186" width="40" height="48" rx="7"/>
+    <rect x="90" y="254" width="40" height="48" rx="7"/>
+    <rect x="90" y="322" width="40" height="48" rx="7"/>
+    <rect x="90" y="390" width="40" height="48" rx="7"/>
+  </g>
+  <!-- Film perforations right -->
+  <g fill="#fff" opacity="0.25">
+    <rect x="382" y="50" width="40" height="48" rx="7"/>
+    <rect x="382" y="118" width="40" height="48" rx="7"/>
+    <rect x="382" y="186" width="40" height="48" rx="7"/>
+    <rect x="382" y="254" width="40" height="48" rx="7"/>
+    <rect x="382" y="322" width="40" height="48" rx="7"/>
+    <rect x="382" y="390" width="40" height="48" rx="7"/>
+  </g>
+  <!-- Film frames -->
+  <g fill="#fff" opacity="0.12">
+    <rect x="145" y="50" width="222" height="48" rx="6"/>
+    <rect x="145" y="118" width="222" height="48" rx="6"/>
+    <rect x="145" y="186" width="222" height="48" rx="6"/>
+    <rect x="145" y="254" width="222" height="48" rx="6"/>
+    <rect x="145" y="322" width="222" height="48" rx="6"/>
+    <rect x="145" y="390" width="222" height="48" rx="6"/>
+  </g>
+
+  <!-- Plus sign (top center) -->
   <g fill="#fff" opacity="0.95">
-    <rect x="100" y="80" width="60" height="352" rx="8" fill="none" stroke="#fff" stroke-width="16"/>
-    <rect x="112" y="100" width="36" height="28" rx="4"/>
-    <rect x="112" y="148" width="36" height="28" rx="4"/>
-    <rect x="112" y="196" width="36" height="28" rx="4"/>
-    <rect x="112" y="288" width="36" height="28" rx="4"/>
-    <rect x="112" y="336" width="36" height="28" rx="4"/>
-    <rect x="112" y="384" width="36" height="28" rx="4"/>
+    <rect x="222" y="100" width="68" height="20" rx="10"/>
+    <rect x="246" y="76" width="20" height="68" rx="10"/>
   </g>
-  <!-- Film strip right -->
+
+  <!-- Speaker + waves group — shifted +25px -->
   <g fill="#fff" opacity="0.95">
-    <rect x="352" y="80" width="60" height="352" rx="8" fill="none" stroke="#fff" stroke-width="16"/>
-    <rect x="364" y="100" width="36" height="28" rx="4"/>
-    <rect x="364" y="148" width="36" height="28" rx="4"/>
-    <rect x="364" y="196" width="36" height="28" rx="4"/>
-    <rect x="364" y="288" width="36" height="28" rx="4"/>
-    <rect x="364" y="336" width="36" height="28" rx="4"/>
-    <rect x="364" y="384" width="36" height="28" rx="4"/>
+    <!-- Speaker cabinet -->
+    <rect x="108" y="235" width="60" height="110" rx="12"/>
+    <!-- Speaker cone -->
+    <path d="M168 235 L273 185 L273 395 L168 345 Z"/>
+    <!-- Dust cap -->
+    <ellipse cx="198" cy="290" rx="16" ry="24" fill="url(#bg)"/>
   </g>
-  <!-- Center merge arrows -->
-  <g fill="#fff">
-    <!-- Left arrow pointing right -->
-    <path d="M200 220 L256 256 L200 292 Z"/>
-    <!-- Right arrow pointing left -->
-    <path d="M312 220 L256 256 L312 292 Z"/>
-    <!-- Center circle -->
-    <circle cx="256" cy="256" r="24" fill="url(#bg)" stroke="#fff" stroke-width="8"/>
+
+  <!-- Sound waves -->
+  <g fill="none" stroke="#fff" stroke-width="16" stroke-linecap="round" opacity="0.8">
+    <path d="M288 210 Q331 290 288 370"/>
   </g>
-  <!-- Plus signs on film strips -->
-  <g fill="#fff" opacity="0.6">
-    <text x="130" y="272" font-family="Arial,sans-serif" font-size="48" font-weight="bold" text-anchor="middle">+</text>
-    <text x="382" y="272" font-family="Arial,sans-serif" font-size="48" font-weight="bold" text-anchor="middle">+</text>
+  <g fill="none" stroke="#fff" stroke-width="13" stroke-linecap="round" opacity="0.55">
+    <path d="M316 185 Q365 290 316 395"/>
+  </g>
+  <g fill="none" stroke="#fff" stroke-width="10" stroke-linecap="round" opacity="0.35">
+    <path d="M340 162 Q393 290 340 418"/>
   </g>
 </svg>
