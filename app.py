@@ -29,6 +29,7 @@ processing = {
 LOGS_DIR = "/app/logs"
 MAX_LOG_SESSIONS = 5
 PREVIEW_DIR = "/tmp/mkv-preview"
+ACTIVITY_LOG = os.path.join(LOGS_DIR, "activity.log")
 
 
 def rotate_logs():
@@ -45,6 +46,32 @@ def write_log(log_file, message, level="info"):
     line = f"[{timestamp}] [{level.upper()}] {message}\n"
     with open(log_file, "a", encoding="utf-8") as f:
         f.write(line)
+
+
+def log_activity(message, level="info"):
+    """Write to the activity log (always visible in the Logs section)."""
+    os.makedirs(LOGS_DIR, exist_ok=True)
+    write_log(ACTIVITY_LOG, message, level)
+
+
+def get_current_log():
+    """Return the path to the currently active log file (session or activity)."""
+    if processing.get("log_file") and os.path.isfile(processing["log_file"]):
+        return processing["log_file"]
+    return ACTIVITY_LOG
+
+
+def find_mkv_files_recursive(directory):
+    """Find all MKV files in directory recursively."""
+    mkv_files = []
+    for root, dirs, filenames in os.walk(directory):
+        dirs[:] = [d for d in dirs if not d.startswith('.')]
+        for f in sorted(filenames):
+            if f.lower().endswith(".mkv"):
+                fpath = os.path.join(root, f)
+                if os.path.isfile(fpath):
+                    mkv_files.append(fpath)
+    return sorted(mkv_files)
 
 
 def scan_serial_dir(serial_dir):
@@ -377,6 +404,8 @@ def api_scan():
         return jsonify({"error": "Directory not found"}), 400
 
     result = scan_serial_dir(serial_dir)
+    if "error" not in result:
+        log_activity(f"Scanned directory: {serial_dir} — {result.get('total_videos', 0)} videos")
     for video in result.get("videos", []):
         for track in video.get("audio_tracks", []):
             try:
@@ -480,10 +509,13 @@ def api_set_default_track():
         )
 
         if result.returncode != 0:
+            log_activity(f"Set default track error: {os.path.basename(filepath)} — {result.stderr or 'mkvpropedit failed'}", "error")
             return jsonify({"error": result.stderr or "mkvpropedit failed"}), 500
 
+        log_activity(f"Default track changed: {os.path.basename(filepath)} — track {track_id} ({track_type})", "success")
         return jsonify({"status": "ok", "file": os.path.basename(filepath), "track_id": track_id})
     except Exception as e:
+        log_activity(f"Set default track error: {os.path.basename(filepath)} — {e}", "error")
         return jsonify({"error": str(e)}), 500
 
 
@@ -504,14 +536,13 @@ def api_set_default_track_bulk():
     if not os.path.isdir(directory):
         return jsonify({"error": "Directory not found"}), 404
 
-    # Collect all MKV files in the directory
-    mkv_files = sorted([
-        os.path.join(directory, f) for f in os.listdir(directory)
-        if f.lower().endswith(".mkv") and os.path.isfile(os.path.join(directory, f))
-    ])
+    # Collect all MKV files in the directory (recursively)
+    mkv_files = find_mkv_files_recursive(directory)
 
     if not mkv_files:
         return jsonify({"error": "No MKV files found in directory"}), 400
+
+    log_activity(f"Bulk default track: type={track_type}, lang={language}, codec={codec}, dir={directory}, files={len(mkv_files)}")
 
     processed = 0
     skipped = 0
@@ -525,6 +556,7 @@ def api_set_default_track_bulk():
             if "error" in info:
                 errors += 1
                 details.append({"file": filename, "status": "error", "reason": info["error"]})
+                log_activity(f"Default track error: {filename} — {info['error']}", "error")
                 continue
 
             # Find matching track: prefer name match, fallback to language+codec
@@ -547,6 +579,7 @@ def api_set_default_track_bulk():
             if not mkv_track:
                 skipped += 1
                 details.append({"file": filename, "status": "skipped", "reason": "track not found"})
+                log_activity(f"Default track skipped: {filename} — track not found", "warning")
                 continue
 
             # Skip if already default
@@ -573,13 +606,17 @@ def api_set_default_track_bulk():
             if result.returncode != 0:
                 errors += 1
                 details.append({"file": filename, "status": "error", "reason": result.stderr or "mkvpropedit failed"})
+                log_activity(f"Default track error: {filename} — {result.stderr or 'mkvpropedit failed'}", "error")
             else:
                 processed += 1
                 details.append({"file": filename, "status": "ok"})
+                log_activity(f"Default track set: {filename} — track {mkv_track['id']}", "success")
         except Exception as e:
             errors += 1
             details.append({"file": filename, "status": "error", "reason": str(e)})
+            log_activity(f"Default track error: {filename} — {e}", "error")
 
+    log_activity(f"Bulk default done: processed={processed}, skipped={skipped}, errors={errors}")
     return jsonify({
         "status": "ok",
         "processed": processed,
@@ -600,13 +637,12 @@ def api_disable_subs_bulk():
     if not os.path.isdir(directory):
         return jsonify({"error": "Directory not found"}), 404
 
-    mkv_files = sorted([
-        os.path.join(directory, f) for f in os.listdir(directory)
-        if f.lower().endswith(".mkv") and os.path.isfile(os.path.join(directory, f))
-    ])
+    mkv_files = find_mkv_files_recursive(directory)
 
     if not mkv_files:
         return jsonify({"error": "No MKV files found"}), 400
+
+    log_activity(f"Bulk disable subs default: dir={directory}, files={len(mkv_files)}")
 
     processed = 0
     skipped = 0
@@ -620,6 +656,7 @@ def api_disable_subs_bulk():
             if "error" in info:
                 errors += 1
                 details.append({"file": filename, "status": "error", "reason": info["error"]})
+                log_activity(f"Disable subs error: {filename} — {info['error']}", "error")
                 continue
 
             subs = [t for t in info.get("tracks", []) if t["type"] == "subtitles"]
@@ -639,10 +676,13 @@ def api_disable_subs_bulk():
 
             processed += 1
             details.append({"file": filename, "status": "ok"})
+            log_activity(f"Subs default disabled: {filename}", "success")
         except Exception as e:
             errors += 1
             details.append({"file": filename, "status": "error", "reason": str(e)})
+            log_activity(f"Disable subs error: {filename} — {e}", "error")
 
+    log_activity(f"Bulk disable subs done: processed={processed}, skipped={skipped}, errors={errors}")
     return jsonify({
         "status": "ok",
         "processed": processed,
@@ -676,6 +716,7 @@ def api_extract_audio():
         return jsonify({"status": "ok", "audio_url": f"/api/audio-file/{cache_key}{ext}"})
 
     try:
+        log_activity(f"Extracting audio: {os.path.basename(filepath)} track {track_id}")
         # Use ffmpeg to transcode to AAC (browser-compatible)
         result = subprocess.run(
             ["ffmpeg", "-y", "-i", filepath,
@@ -686,12 +727,16 @@ def api_extract_audio():
             capture_output=True, text=True, timeout=120
         )
         if not os.path.isfile(out_path):
+            log_activity(f"Extract audio error: {os.path.basename(filepath)} — {result.stderr[-200:] if result.stderr else 'failed'}", "error")
             return jsonify({"error": result.stderr[-500:] if result.stderr else "Extraction failed"}), 500
 
+        log_activity(f"Audio extracted: {os.path.basename(filepath)} track {track_id}", "success")
         return jsonify({"status": "ok", "audio_url": f"/api/audio-file/{cache_key}{ext}"})
     except subprocess.TimeoutExpired:
+        log_activity(f"Extract audio timeout: {os.path.basename(filepath)}", "error")
         return jsonify({"error": "Extraction timeout"}), 500
     except Exception as e:
+        log_activity(f"Extract audio error: {os.path.basename(filepath)} — {e}", "error")
         return jsonify({"error": str(e)}), 500
 
 
@@ -732,6 +777,7 @@ def api_remux_video():
     audio_args = ["-c:a", "aac", "-b:a", "192k", "-ac", "2"] if needs_transcode else ["-c:a", "copy"]
 
     try:
+        log_activity(f"Remuxing video: {os.path.basename(filepath)} audio track {audio_track_id}")
         result = subprocess.run(
             ["ffmpeg", "-y", "-i", filepath,
              "-map", "0:v:0", "-map", f"0:{audio_track_id}",
@@ -742,12 +788,16 @@ def api_remux_video():
             capture_output=True, text=True, timeout=600
         )
         if not os.path.isfile(out_path):
+            log_activity(f"Remux error: {os.path.basename(filepath)} — {result.stderr[-200:] if result.stderr else 'failed'}", "error")
             return jsonify({"error": result.stderr[-500:] if result.stderr else "Remux failed"}), 500
 
+        log_activity(f"Video remuxed: {os.path.basename(filepath)}", "success")
         return jsonify({"status": "ok", "video_url": f"/api/remuxed-file/{cache_key}.mp4"})
     except subprocess.TimeoutExpired:
+        log_activity(f"Remux timeout: {os.path.basename(filepath)}", "error")
         return jsonify({"error": "Remux timeout"}), 500
     except Exception as e:
+        log_activity(f"Remux error: {os.path.basename(filepath)} — {e}", "error")
         return jsonify({"error": str(e)}), 500
 
 
@@ -871,6 +921,16 @@ def api_status():
 @app.route("/api/logs")
 def api_logs():
     sessions = []
+
+    # Activity log first (always present)
+    if os.path.isfile(ACTIVITY_LOG):
+        sessions.append({
+            "name": "activity.log",
+            "path": ACTIVITY_LOG,
+            "size": os.path.getsize(ACTIVITY_LOG),
+        })
+
+    # Session logs
     for f in sorted(glob.glob(os.path.join(LOGS_DIR, "session_*.log")), reverse=True):
         sessions.append({
             "name": os.path.basename(f),
@@ -885,10 +945,13 @@ def api_logs():
         if os.path.isfile(safe):
             with open(safe, "r", encoding="utf-8") as f:
                 content = f.read()
-    elif sessions:
-        latest = sessions[0]["path"]
-        if os.path.isfile(latest):
-            with open(latest, "r", encoding="utf-8") as f:
+    else:
+        # Default: show activity log (most recent)
+        if os.path.isfile(ACTIVITY_LOG):
+            with open(ACTIVITY_LOG, "r", encoding="utf-8") as f:
+                content = f.read()
+        elif sessions:
+            with open(sessions[0]["path"], "r", encoding="utf-8") as f:
                 content = f.read()
 
     return jsonify({"sessions": sessions, "content": content})
