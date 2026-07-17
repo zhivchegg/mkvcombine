@@ -1,4 +1,4 @@
-// MKV Merger Pro - Main Script
+// MKVCombine - Main Script
 
 let pollTimer = null;
 let logTimer = null;

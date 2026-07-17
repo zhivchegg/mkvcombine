@@ -1,4 +1,4 @@
-// File Manager for MKV Merger Pro
+// File Manager for MKVCombine
 
 let fmTarget = null;
 let fmCurrentPath = "/";

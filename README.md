@@ -1,4 +1,4 @@
-# MKV Merger Pro
+# MKVCombine
 
 Batch merge external audio tracks (MKA, AAC, AC3, DTS) and subtitles (ASS, SRT) into MKV video files. Designed for NAS servers (QNAP, Synology, Unraid) and home media servers.
 
@@ -20,8 +20,8 @@ Batch merge external audio tracks (MKA, AAC, AC3, DTS) and subtitles (ASS, SRT) 
 
 ```bash
 # Clone the repository
-git clone https://github.com/YOUR_USERNAME/mkv-merge-pro.git
-cd mkv-merge-pro
+git clone https://github.com/zhivchegg/mkvcombine.git
+cd mkvcombine
 
 # Create .env file
 cp .env.example .env

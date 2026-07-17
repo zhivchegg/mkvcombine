@@ -1,14 +1,14 @@
-# MKV Merger Pro — Docker Compose
-# https://github.com/YOUR_USERNAME/mkv-merge-pro
+# MKVCombine — Docker Compose
+# https://github.com/zhivchegg/mkvcombine
 #
 # Copy this file and adjust paths below to match your setup.
 # Then run: docker compose up -d
 # Access at: http://localhost:5000
 
 services:
-  mkv-merge-pro:
+  mkvcombine:
     build: .
-    container_name: mkv-merge-pro
+    container_name: mkvcombine
     ports:
       - "${PORT:-5000}:5000"
     volumes:
