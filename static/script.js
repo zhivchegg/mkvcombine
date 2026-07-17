@@ -457,7 +457,7 @@ function displayTrackPanel(tracks, filepath) {
         bulkHtml += `<div class="bulk-group"><span class="bulk-label"><i class="bi bi-music-note-beamed"></i> ${window.t("player.bulk_audio")}</span>`;
         bulkHtml += audioTracks.map((t, i) => `
             <label class="bulk-radio">
-                <input type="radio" name="bulkAudio" value="${t.id}" data-language="${escapeAttr(t.language || '')}" data-codec="${escapeAttr(t.codec || '')}" ${t.default ? 'checked' : ''}>
+                <input type="radio" name="bulkAudio" value="${t.id}" data-track-name="${escapeAttr(t.track_name || '')}" data-language="${escapeAttr(t.language || '')}" data-codec="${escapeAttr(t.codec || '')}" ${t.default ? 'checked' : ''}>
                 ${escapeHtml(t.track_name || t.language || ('#' + t.id))}
             </label>
         `).join('');
@@ -468,7 +468,7 @@ function displayTrackPanel(tracks, filepath) {
         bulkHtml += `<div class="bulk-group"><span class="bulk-label"><i class="bi bi-card-text"></i> ${window.t("player.bulk_subs")}</span>`;
         bulkHtml += subTracks.map((t, i) => `
             <label class="bulk-radio">
-                <input type="radio" name="bulkSubs" value="${t.id}" data-language="${escapeAttr(t.language || '')}" data-codec="${escapeAttr(t.codec || '')}" ${t.default ? 'checked' : ''}>
+                <input type="radio" name="bulkSubs" value="${t.id}" data-track-name="${escapeAttr(t.track_name || '')}" data-language="${escapeAttr(t.language || '')}" data-codec="${escapeAttr(t.codec || '')}" ${t.default ? 'checked' : ''}>
                 ${escapeHtml(t.track_name || t.language || ('#' + t.id))}
             </label>
         `).join('');
@@ -551,6 +551,7 @@ async function previewAudioTrack(btn) {
         btn.disabled = false;
         btn.innerHTML = `<i class="bi bi-stop-fill"></i> ${t("notification.playing")}`;
         btn.onclick = () => { stopPreviewAudio(); };
+        loadCurrentLog();
 
     } catch (e) {
         showNotification(t("notification.error_prefix") + e.message, "error");
@@ -620,6 +621,7 @@ async function remuxAndPlay(btn) {
         document.querySelectorAll('.track-row').forEach(r => r.style.background = '');
         const row = btn.closest('.track-row');
         if (row) row.style.background = 'rgba(234,88,12,0.1)';
+        loadCurrentLog();
 
     } catch (e) {
         showNotification(t("notification.error_prefix") + e.message, "error");
@@ -650,6 +652,7 @@ async function applyBulkDefault(btn) {
     try {
         if (audioRadio) {
             const body = { dir: dir, type: "audio", language: audioRadio.dataset.language, codec: audioRadio.dataset.codec };
+            if (audioRadio.dataset.trackName) body.track_name = audioRadio.dataset.trackName;
             const res = await fetch("/api/set-default-track-bulk", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -667,6 +670,7 @@ async function applyBulkDefault(btn) {
 
         if (subsRadio) {
             const body = { dir: dir, type: "subtitles", language: subsRadio.dataset.language, codec: subsRadio.dataset.codec };
+            if (subsRadio.dataset.trackName) body.track_name = subsRadio.dataset.trackName;
             const res = await fetch("/api/set-default-track-bulk", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -704,6 +708,7 @@ async function applyBulkDefault(btn) {
         showNotification(parts.join(", "), totalErrors > 0 ? "warning" : "success");
 
         if (currentVideoPath) await loadTrackInfo(currentVideoPath);
+        loadCurrentLog();
     } catch (e) {
         showNotification(t("notification.error_prefix") + e.message, "error");
     } finally {
@@ -734,6 +739,7 @@ async function setDefaultTrack(filepath, trackId, trackType) {
         showNotification(t("notification.default_changed"), "success");
         // Reload track info
         await loadTrackInfo(filepath);
+        loadCurrentLog();
     } catch (e) { showNotification(t("notification.error_prefix") + e.message, "error"); }
 }
 
@@ -773,6 +779,7 @@ async function setDefaultTrackBulk(btn) {
         showNotification(parts.join(", "), data.errors > 0 ? "warning" : "success");
         // Reload current file track info
         if (currentVideoPath) await loadTrackInfo(currentVideoPath);
+        loadCurrentLog();
     } catch (e) {
         showNotification(t("notification.error_prefix") + e.message, "error");
     } finally {
@@ -793,6 +800,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     loadLogSessions();
+    loadCurrentLog();
 
     // Auto-load player files when player section is opened
     const playerSection = document.getElementById("playerSection");
