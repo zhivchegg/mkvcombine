@@ -959,6 +959,9 @@ def api_logs():
 
 if __name__ == "__main__":
     os.makedirs(LOGS_DIR, exist_ok=True)
+    # Clean activity log on startup
+    if os.path.isfile(ACTIVITY_LOG):
+        os.remove(ACTIVITY_LOG)
     # Clean old preview files on startup
     if os.path.isdir(PREVIEW_DIR):
         shutil.rmtree(PREVIEW_DIR, ignore_errors=True)
