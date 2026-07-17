@@ -162,7 +162,7 @@ def get_mkv_track_info(filepath):
         return {"error": str(e)}
 
 
-def process_files(serial_dir, output_dir, overwrite, selected_audio=None, selected_subs=None, default_audio=None, default_subs=None):
+def process_files(serial_dir, output_dir, overwrite, selected_audio=None, selected_subs=None, default_audio=None, default_subs=None, subs_no_default=False):
     """Main processing function: merge selected tracks into each video."""
     global processing
 
@@ -250,7 +250,10 @@ def process_files(serial_dir, output_dir, overwrite, selected_audio=None, select
 
         # Add subtitle tracks
         for j, track in enumerate(subtitle_tracks):
-            is_default = (default_subs and track["track_name"] == default_subs) or (not default_subs and j == 0)
+            if subs_no_default:
+                is_default = False
+            else:
+                is_default = (default_subs and track["track_name"] == default_subs) or (not default_subs and j == 0)
             cmd.extend([
                 "--track-name", f"0:{track['track_name']}",
                 "--language", "0:rus",
@@ -813,6 +816,7 @@ def api_start():
     selected_subs = data.get("selected_subs")
     default_audio = data.get("default_audio")  # track name to set as default
     default_subs = data.get("default_subs")
+    subs_no_default = data.get("subs_no_default", False)
 
     if not serial_dir or not os.path.isdir(serial_dir):
         return jsonify({"error": "Invalid serial directory"}), 400
@@ -835,7 +839,7 @@ def api_start():
 
     thread = threading.Thread(
         target=process_files,
-        args=(serial_dir, output_dir, overwrite, selected_audio, selected_subs, default_audio, default_subs),
+        args=(serial_dir, output_dir, overwrite, selected_audio, selected_subs, default_audio, default_subs, subs_no_default),
         daemon=True,
     )
     thread.start()

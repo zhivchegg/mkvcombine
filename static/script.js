@@ -65,7 +65,12 @@ function displayScanResults(data, dir) {
 
     if (audioNames.length > 0) {
         audioSelect.style.display = "block";
-        audioCheckboxes.innerHTML = audioNames.map((name, i) => `
+        audioCheckboxes.innerHTML = `
+            <div style="display:flex; gap:8px; margin-bottom:8px;">
+                <button onclick="toggleAllTracks('audioCheckboxes', true)" class="btn-browse" style="height:28px; padding:0 10px; font-size:0.75rem;">Выбрать все</button>
+                <button onclick="toggleAllTracks('audioCheckboxes', false)" class="btn-browse" style="height:28px; padding:0 10px; font-size:0.75rem;">Снять все</button>
+            </div>
+        ` + audioNames.map((name, i) => `
             <div class="track-item">
                 <label><input type="checkbox" checked data-audio-name="${escapeAttr(name)}" onchange="onAudioCheckChange(this)"> ${escapeHtml(name)}</label>
                 <label style="font-size:0.75rem; color:var(--text-muted); cursor:pointer;">
@@ -84,14 +89,25 @@ function displayScanResults(data, dir) {
 
     if (subNames.length > 0) {
         subsSelect.style.display = "block";
-        subsCheckboxes.innerHTML = subNames.map((name, i) => `
+        subsCheckboxes.innerHTML = `
+            <div style="display:flex; gap:8px; margin-bottom:8px;">
+                <button onclick="toggleAllTracks('subsCheckboxes', true)" class="btn-browse" style="height:28px; padding:0 10px; font-size:0.75rem;">Выбрать все</button>
+                <button onclick="toggleAllTracks('subsCheckboxes', false)" class="btn-browse" style="height:28px; padding:0 10px; font-size:0.75rem;">Снять все</button>
+            </div>
+        ` + subNames.map((name, i) => `
             <div class="track-item">
                 <label><input type="checkbox" checked data-sub-name="${escapeAttr(name)}" onchange="onSubCheckChange(this)"> ${escapeHtml(name)}</label>
                 <label style="font-size:0.75rem; color:var(--text-muted); cursor:pointer;">
                     <input type="radio" name="defaultSubs" value="${escapeAttr(name)}" ${i === 0 ? 'checked' : ''}> дефолт
                 </label>
             </div>
-        `).join("");
+        `).join("") + `
+            <div class="track-item" style="border-top:1px solid var(--border); margin-top:8px; padding-top:10px;">
+                <label style="font-size:0.8rem; color:var(--warning); cursor:pointer;">
+                    <input type="checkbox" id="subsNoDefault"> <i class="bi bi-eye-slash"></i> Субтитры не включать по умолчанию
+                </label>
+            </div>
+        `;
     } else {
         subsSelect.style.display = "none";
     }
@@ -109,6 +125,13 @@ function displayScanResults(data, dir) {
     const outputInput = document.getElementById("outputDir");
     if (!outputInput.value) outputInput.value = dir + "/output";
     document.getElementById("playerDir").value = dir;
+}
+
+function toggleAllTracks(containerId, checked) {
+    document.querySelectorAll(`#${containerId} input[type="checkbox"][data-audio-name], #${containerId} input[type="checkbox"][data-sub-name]`).forEach(cb => {
+        cb.checked = checked;
+        cb.dispatchEvent(new Event('change'));
+    });
 }
 
 function getSelectedAudio() {
@@ -172,6 +195,7 @@ async function startProcessing() {
     const selectedSubs = scanData ? getSelectedSubs() : null;
     const defaultAudio = scanData ? getDefaultAudio() : null;
     const defaultSubs = scanData ? getDefaultSubs() : null;
+    const subsNoDefault = scanData ? (document.getElementById('subsNoDefault')?.checked || false) : false;
 
     try {
         const res = await fetch("/api/start", {
@@ -185,6 +209,7 @@ async function startProcessing() {
                 selected_subs: selectedSubs,
                 default_audio: defaultAudio,
                 default_subs: defaultSubs,
+                subs_no_default: subsNoDefault,
             }),
         });
         const data = await res.json();
