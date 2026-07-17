@@ -2,8 +2,6 @@
 
 Batch merge external audio tracks (MKA, AAC, AC3, DTS) and subtitles (ASS, SRT) into MKV video files. Designed for NAS servers (QNAP, Synology, Unraid) and home media servers.
 
-> **Note:** The UI is in Russian. English localization is planned.
-
 ## Features
 
 - **Batch processing** — merge audio/subtitle tracks into multiple MKV files at once
@@ -12,9 +10,26 @@ Batch merge external audio tracks (MKA, AAC, AC3, DTS) and subtitles (ASS, SRT) 
 - **Video playback** — built-in player with remuxed MP4 output for universal browser support
 - **Default track management** — set default audio/subtitle tracks per file or in bulk
 - **Subtitle control** — disable subtitles by default while keeping them selectable
+- **Multi-language UI** — 7 languages (EN, RU, DE, ES, FR, JA, ZH), persisted in localStorage
 - **Overwrite mode** — replace original files with temp-file swap (safe atomic replacement)
 - **Directory browser** — built-in file manager for selecting directories
 - **Session logs** — processing logs with rotation (keeps last 5 sessions)
+
+## Languages
+
+The UI supports 7 languages with automatic persistence:
+
+| Code | Language |
+|------|----------|
+| `en` | English (default) |
+| `ru` | Русский |
+| `de` | Deutsch |
+| `es` | Español |
+| `fr` | Français |
+| `ja` | 日本語 |
+| `zh` | 中文 |
+
+Language selector is in the top-right corner of the app header.
 
 ## Quick Start
 
@@ -113,6 +128,7 @@ Frontend (vanilla JS, no framework)
 ├── Plyr video player
 ├── Built-in directory browser
 ├── Polling-based progress updates
+├── i18n — 7 languages, localStorage persistence
 └── Glassmorphism dark theme (Inter font)
 ```
 
