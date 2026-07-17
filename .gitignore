@@ -1,0 +1,40 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Virtual environment
+venv/
+.venv/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+logs/
+*.log
+
+# Runtime / temp
+*.tmp
+*.bak
+
+# Docker
+.docker/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+.env.local

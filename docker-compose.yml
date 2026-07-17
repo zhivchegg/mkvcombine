@@ -1,0 +1,22 @@
+# MKV Merger Pro — Docker Compose
+# https://github.com/YOUR_USERNAME/mkv-merge-pro
+#
+# Copy this file and adjust paths below to match your setup.
+# Then run: docker compose up -d
+# Access at: http://localhost:5000
+
+services:
+  mkv-merge-pro:
+    build: .
+    container_name: mkv-merge-pro
+    ports:
+      - "${PORT:-5000}:5000"
+    volumes:
+      # Path to your video files (MKV files and external audio/subtitle tracks)
+      - ${VIDEO_DIR}:/video:ro
+      # Path where merged files will be saved
+      - ${OUTPUT_DIR}:/output:rw
+    environment:
+      - LOG_DIR=/app/logs
+      - MAX_LOG_SESSIONS=5
+    restart: unless-stopped
