@@ -10,11 +10,11 @@ let currentVideoPath = null;
 
 async function scanDirectory() {
     const dir = document.getElementById("serialDir").value.trim();
-    if (!dir) { showNotification("Выберите каталог сериала", "warning"); return; }
+    if (!dir) { showNotification(t("scan.select_dir"), "warning"); return; }
 
     const btn = document.getElementById("btnScan");
     btn.disabled = true;
-    btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Сканирование...';
+    btn.innerHTML = '<i class="bi bi-hourglass-split"></i> ' + t("scan.scanning");
 
     // Show shimmer placeholders
     const preview = document.getElementById("scanPreview");
@@ -32,17 +32,17 @@ async function scanDirectory() {
         });
         const data = await res.json();
         if (!res.ok || data.error) {
-            showNotification(data.error || "Ошибка сканирования", "error");
+            showNotification(data.error || t("scan.error"), "error");
             document.getElementById("scanPreview").style.display = "none";
             return;
         }
         scanData = data;
         displayScanResults(data, dir);
     } catch (e) {
-        showNotification("Ошибка сети: " + e.message, "error");
+        showNotification(t("scan.network_error") + e.message, "error");
     } finally {
         btn.disabled = false;
-        btn.innerHTML = '<i class="bi bi-search"></i> Сканировать';
+        btn.innerHTML = '<i class="bi bi-search"></i> ' + t("scan.scan_btn");
     }
 }
 
@@ -54,7 +54,7 @@ function displayScanResults(data, dir) {
 
     const totalAudio = data.videos.reduce((sum, v) => sum + v.audio_tracks.length, 0);
     const totalSubs = data.videos.reduce((sum, v) => sum + v.subtitle_tracks.length, 0);
-    summary.innerHTML = `<i class="bi bi-check-circle-fill"></i> Найдено: ${data.total_videos} видео, ${totalAudio} аудио, ${totalSubs} субтитров`;
+    summary.innerHTML = `<i class="bi bi-check-circle-fill"></i> ${t("scan.found", { videos: data.total_videos, audio: totalAudio, subs: totalSubs })}`;
 
     dubs.innerHTML = data.dub_names.map(d => `<span class="dub-chip"><i class="bi bi-music-note-beamed" style="margin-right:4px;"></i>${escapeHtml(d)}</span>`).join("");
 
@@ -67,14 +67,14 @@ function displayScanResults(data, dir) {
         audioSelect.style.display = "block";
         audioCheckboxes.innerHTML = `
             <div style="display:flex; gap:8px; margin-bottom:8px;">
-                <button onclick="toggleAllTracks('audioCheckboxes', true)" class="btn-browse" style="height:28px; padding:0 10px; font-size:0.75rem;">Выбрать все</button>
-                <button onclick="toggleAllTracks('audioCheckboxes', false)" class="btn-browse" style="height:28px; padding:0 10px; font-size:0.75rem;">Снять все</button>
+                <button onclick="toggleAllTracks('audioCheckboxes', true)" class="btn-browse" style="height:28px; padding:0 10px; font-size:0.75rem;">${t("scan.select_all")}</button>
+                <button onclick="toggleAllTracks('audioCheckboxes', false)" class="btn-browse" style="height:28px; padding:0 10px; font-size:0.75rem;">${t("scan.deselect_all")}</button>
             </div>
         ` + audioNames.map((name, i) => `
             <div class="track-item">
                 <label><input type="checkbox" checked data-audio-name="${escapeAttr(name)}" onchange="onAudioCheckChange(this)"> ${escapeHtml(name)}</label>
                 <label style="font-size:0.75rem; color:var(--text-muted); cursor:pointer;">
-                    <input type="radio" name="defaultAudio" value="${escapeAttr(name)}" ${i === 0 ? 'checked' : ''}> дефолт
+                    <input type="radio" name="defaultAudio" value="${escapeAttr(name)}" ${i === 0 ? 'checked' : ''}> ${t("scan.default")}
                 </label>
             </div>
         `).join("");
@@ -91,20 +91,20 @@ function displayScanResults(data, dir) {
         subsSelect.style.display = "block";
         subsCheckboxes.innerHTML = `
             <div style="display:flex; gap:8px; margin-bottom:8px;">
-                <button onclick="toggleAllTracks('subsCheckboxes', true)" class="btn-browse" style="height:28px; padding:0 10px; font-size:0.75rem;">Выбрать все</button>
-                <button onclick="toggleAllTracks('subsCheckboxes', false)" class="btn-browse" style="height:28px; padding:0 10px; font-size:0.75rem;">Снять все</button>
+                <button onclick="toggleAllTracks('subsCheckboxes', true)" class="btn-browse" style="height:28px; padding:0 10px; font-size:0.75rem;">${t("scan.select_all")}</button>
+                <button onclick="toggleAllTracks('subsCheckboxes', false)" class="btn-browse" style="height:28px; padding:0 10px; font-size:0.75rem;">${t("scan.deselect_all")}</button>
             </div>
         ` + subNames.map((name, i) => `
             <div class="track-item">
                 <label><input type="checkbox" checked data-sub-name="${escapeAttr(name)}" onchange="onSubCheckChange(this)"> ${escapeHtml(name)}</label>
                 <label style="font-size:0.75rem; color:var(--text-muted); cursor:pointer;">
-                    <input type="radio" name="defaultSubs" value="${escapeAttr(name)}" ${i === 0 ? 'checked' : ''}> дефолт
+                    <input type="radio" name="defaultSubs" value="${escapeAttr(name)}" ${i === 0 ? 'checked' : ''}> ${t("scan.default")}
                 </label>
             </div>
         `).join("") + `
             <div class="track-item" style="border-top:1px solid var(--border); margin-top:8px; padding-top:10px;">
                 <label style="font-size:0.8rem; color:var(--warning); cursor:pointer;">
-                    <input type="checkbox" id="subsNoDefault"> <i class="bi bi-eye-slash"></i> Субтитры не включать по умолчанию
+                    <input type="checkbox" id="subsNoDefault"> <i class="bi bi-eye-slash"></i> ${t("scan.no_subs_default")}
                 </label>
             </div>
         `;
@@ -115,9 +115,9 @@ function displayScanResults(data, dir) {
     // Video list
     list.innerHTML = data.videos.map(v => {
         const parts = [];
-        if (v.audio_tracks.length > 0) parts.push(`<span class="count">${v.audio_tracks.length}</span> аудио`);
-        if (v.subtitle_tracks.length > 0) parts.push(`<span class="count">${v.subtitle_tracks.length}</span> субтитров`);
-        const trackInfo = parts.length > 0 ? `<span class="tracks">${parts.join(", ")}</span>` : '<span class="tracks" style="color:var(--warning);">нет дорожек</span>';
+        if (v.audio_tracks.length > 0) parts.push(`<span class="count">${v.audio_tracks.length}</span> ${t("player.audio").toLowerCase()}`);
+        if (v.subtitle_tracks.length > 0) parts.push(`<span class="count">${v.subtitle_tracks.length}</span> ${t("player.subs").toLowerCase()}`);
+        const trackInfo = parts.length > 0 ? `<span class="tracks">${parts.join(", ")}</span>` : `<span class="tracks" style="color:var(--warning);">${t("scan.no_tracks")}</span>`;
         return `<div class="scan-video"><i class="bi bi-film" style="color:var(--accent);"></i><span class="name">${escapeHtml(v.filename)}</span>${trackInfo}</div>`;
     }).join("");
 
@@ -188,8 +188,8 @@ async function startProcessing() {
     const outputDir = document.getElementById("outputDir").value.trim();
     const overwrite = document.getElementById("overwrite").checked;
 
-    if (!serialDir) { showNotification("Выберите каталог сериала", "warning"); return; }
-    if (!overwrite && !outputDir) { showNotification("Выберите каталог для вывода или включите перезапись", "warning"); return; }
+    if (!serialDir) { showNotification(t("scan.select_dir"), "warning"); return; }
+    if (!overwrite && !outputDir) { showNotification(t("controls.no_output"), "warning"); return; }
 
     const selectedAudio = scanData ? getSelectedAudio() : null;
     const selectedSubs = scanData ? getSelectedSubs() : null;
@@ -213,20 +213,20 @@ async function startProcessing() {
             }),
         });
         const data = await res.json();
-        if (!res.ok) { showNotification(data.error || "Ошибка", "error"); return; }
+        if (!res.ok) { showNotification(data.error || t("notification.error_prefix").trim(), "error"); return; }
 
         document.getElementById("btnStart").disabled = true;
         document.getElementById("btnStop").disabled = false;
         document.getElementById("progressSection").classList.add("visible");
         const badge = document.getElementById("statusBadge");
         badge.className = "status-badge active";
-        badge.innerHTML = '<i class="bi bi-circle-fill" style="font-size:6px;"></i> Обработка';
+        badge.innerHTML = '<i class="bi bi-circle-fill" style="font-size:6px;"></i> ' + t("status.processing");
         document.getElementById("logArea").innerHTML = "";
 
         pollStatus();
         pollTimer = setInterval(pollStatus, 1000);
         logTimer = setInterval(loadCurrentLog, 2000);
-    } catch (e) { showNotification("Ошибка сети: " + e.message, "error"); }
+    } catch (e) { showNotification(t("scan.network_error") + e.message, "error"); }
 }
 
 async function stopProcessing() {
@@ -252,10 +252,10 @@ async function pollStatus() {
             document.getElementById("btnStop").disabled = true;
             const badge = document.getElementById("statusBadge");
             badge.className = "status-badge done";
-            badge.innerHTML = '<i class="bi bi-circle-fill" style="font-size:6px;"></i> Завершено';
+            badge.innerHTML = '<i class="bi bi-circle-fill" style="font-size:6px;"></i> ' + t("status.done");
             loadCurrentLog(); loadLogSessions();
-            if (data.errors > 0) showNotification(`Обработка завершена с ошибками: ${data.errors}`, "warning");
-            else showNotification(`Обработка завершена: ${data.success} файлов`, "success");
+            if (data.errors > 0) showNotification(t("notification.processing_errors", { count: data.errors }), "warning");
+            else showNotification(t("notification.processing_done", { count: data.success }), "success");
         }
     } catch (e) { console.error(e); }
 }
@@ -278,7 +278,7 @@ async function loadLogSessions() {
         const res = await fetch("/api/logs");
         const data = await res.json();
         const sel = document.getElementById("logSession");
-        sel.innerHTML = '<option value="">— текущая сессия —</option>';
+        sel.innerHTML = `<option value="">${t("logs.current_session")}</option>`;
         for (const s of data.sessions) sel.innerHTML += `<option value="${s.name}">${s.name} (${formatBytes(s.size)})</option>`;
     } catch (e) { console.error(e); }
 }
@@ -314,7 +314,7 @@ function encodePathForUrl(path) {
 
 async function loadPlayerFiles() {
     const dir = document.getElementById("playerDir").value.trim();
-    if (!dir) { showNotification("Укажите каталог с файлами", "warning"); return; }
+    if (!dir) { showNotification(t("scan.select_dir"), "warning"); return; }
 
     // Show shimmer placeholders
     document.getElementById("playerFileList").innerHTML =
@@ -327,7 +327,7 @@ async function loadPlayerFiles() {
             body: JSON.stringify({ dir: dir }),
         });
         const data = await res.json();
-        if (!res.ok || data.error) { showNotification(data.error || "Ошибка", "error"); return; }
+        if (!res.ok || data.error) { showNotification(data.error || t("notification.error_prefix").trim(), "error"); return; }
 
         const list = document.getElementById("playerFileList");
         // Store file list in data attribute for later use
@@ -342,9 +342,9 @@ async function loadPlayerFiles() {
         `).join("");
 
         if (!data.files.length) {
-            list.innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-muted);">Нет MKV файлов</div>';
+            list.innerHTML = `<div style="text-align:center; padding:20px; color:var(--text-muted);">${t("player.no_mkv")}</div>`;
         }
-    } catch (e) { showNotification("Ошибка сети: " + e.message, "error"); }
+    } catch (e) { showNotification(t("scan.network_error") + e.message, "error"); }
 }
 
 function selectPlayerFile(idx) {
@@ -419,27 +419,27 @@ function displayTrackPanel(tracks, filepath) {
     const mediaTracks = tracks.filter(t => t.type === "audio" || t.type === "subtitles");
 
     if (!mediaTracks.length) {
-        list.innerHTML = '<div style="color:var(--text-muted); font-size:0.85rem; padding:8px;">Нет аудио/субтитровых дорожек</div>';
+        list.innerHTML = `<div style="color:var(--text-muted); font-size:0.85rem; padding:8px;">${t("player.no_tracks")}</div>`;
         return;
     }
 
     list.innerHTML = mediaTracks.map(t => {
         const isAudio = t.type === "audio";
         const typeClass = isAudio ? "audio" : "subs";
-        const typeLabel = isAudio ? "Аудио" : "Субтитры";
+        const typeLabel = isAudio ? window.t("player.audio") : window.t("player.subs");
         const defaultBtn = t.default
-            ? `<button class="btn-set-default is-default"><i class="bi bi-check-circle-fill"></i> Дефолт</button>`
-            : `<button class="btn-set-default not-default" data-filepath="${escapeAttr(filepath)}" data-track-id="${t.id}" data-track-type="${t.type}" onclick="setDefaultTrackFromBtn(this)">Сделать дефолтной</button>`;
+            ? `<button class="btn-set-default is-default"><i class="bi bi-check-circle-fill"></i> ${window.t("player.is_default")}</button>`
+            : `<button class="btn-set-default not-default" data-filepath="${escapeAttr(filepath)}" data-track-id="${t.id}" data-track-type="${t.type}" onclick="setDefaultTrackFromBtn(this)">${window.t("player.set_default")}</button>`;
         const previewBtn = isAudio
-            ? `<button class="btn-set-default not-default" data-filepath="${escapeAttr(filepath)}" data-track-id="${t.id}" onclick="previewAudioTrack(this)" title="Прослушать"><i class="bi bi-headphones"></i> Прослушать</button>`
+            ? `<button class="btn-set-default not-default" data-filepath="${escapeAttr(filepath)}" data-track-id="${t.id}" onclick="previewAudioTrack(this)" title="${window.t("player.listen")}"><i class="bi bi-headphones"></i> ${window.t("player.listen")}</button>`
             : '';
         const watchBtn = isAudio
-            ? `<button class="btn-set-default not-default" data-filepath="${escapeAttr(filepath)}" data-track-id="${t.id}" onclick="remuxAndPlay(this)" title="Смотреть с этой дорожкой"><i class="bi bi-play-circle"></i> Смотреть</button>`
+            ? `<button class="btn-set-default not-default" data-filepath="${escapeAttr(filepath)}" data-track-id="${t.id}" onclick="remuxAndPlay(this)" title="${window.t("player.watch_aria")}"><i class="bi bi-play-circle"></i> ${window.t("player.watch")}</button>`
             : '';
         return `<div class="track-row" data-track-id="${t.id}">
             <span class="track-type ${typeClass}">${typeLabel}</span>
             <div class="track-info">
-                <span class="track-name">${escapeHtml(t.track_name || t.language || 'Без названия')}</span>
+                <span class="track-name">${escapeHtml(t.track_name || t.language || window.t("player.no_name"))}</span>
                 <span class="track-lang">${t.language || ''} ${t.codec ? '· ' + t.codec : ''}</span>
             </div>
             ${previewBtn}
@@ -454,7 +454,7 @@ function displayTrackPanel(tracks, filepath) {
     let bulkHtml = '<div class="bulk-default-section">';
 
     if (audioTracks.length > 1) {
-        bulkHtml += '<div class="bulk-group"><span class="bulk-label"><i class="bi bi-music-note-beamed"></i> Аудио по умолчанию для всех:</span>';
+        bulkHtml += `<div class="bulk-group"><span class="bulk-label"><i class="bi bi-music-note-beamed"></i> ${window.t("player.bulk_audio")}</span>`;
         bulkHtml += audioTracks.map((t, i) => `
             <label class="bulk-radio">
                 <input type="radio" name="bulkAudio" value="${t.id}" data-language="${escapeAttr(t.language || '')}" data-codec="${escapeAttr(t.codec || '')}" ${t.default ? 'checked' : ''}>
@@ -465,7 +465,7 @@ function displayTrackPanel(tracks, filepath) {
     }
 
     if (subTracks.length > 1) {
-        bulkHtml += '<div class="bulk-group"><span class="bulk-label"><i class="bi bi-card-text"></i> Субтитры по умолчанию для всех:</span>';
+        bulkHtml += `<div class="bulk-group"><span class="bulk-label"><i class="bi bi-card-text"></i> ${window.t("player.bulk_subs")}</span>`;
         bulkHtml += subTracks.map((t, i) => `
             <label class="bulk-radio">
                 <input type="radio" name="bulkSubs" value="${t.id}" data-language="${escapeAttr(t.language || '')}" data-codec="${escapeAttr(t.codec || '')}" ${t.default ? 'checked' : ''}>
@@ -477,12 +477,12 @@ function displayTrackPanel(tracks, filepath) {
 
     // Always show "no subtitles" option if there are any subtitle tracks
     if (subTracks.length > 0) {
-        bulkHtml += `<div class="bulk-group"><label class="bulk-radio"><input type="checkbox" id="bulkNoSubs"> <i class="bi bi-eye-slash"></i> Субтитры не включать по умолчанию</label></div>`;
+        bulkHtml += `<div class="bulk-group"><label class="bulk-radio"><input type="checkbox" id="bulkNoSubs"> <i class="bi bi-eye-slash"></i> ${window.t("player.bulk_no_subs")}</label></div>`;
     }
 
     const hasBulkOptions = audioTracks.length > 1 || subTracks.length > 1 || subTracks.length > 0;
     if (hasBulkOptions) {
-        bulkHtml += `<button class="btn-bulk-apply" onclick="applyBulkDefault(this)" data-filepath="${escapeAttr(filepath)}"><i class="bi bi-layers"></i> Применить ко всем файлам в папке</button>`;
+        bulkHtml += `<button class="btn-bulk-apply" onclick="applyBulkDefault(this)" data-filepath="${escapeAttr(filepath)}"><i class="bi bi-layers"></i> ${window.t("player.bulk_apply")}</button>`;
     }
     bulkHtml += '</div>';
     list.innerHTML += bulkHtml;
@@ -495,8 +495,8 @@ function displayTrackPanel(tracks, filepath) {
         playerDiv.innerHTML = `
             <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;">
                 <i class="bi bi-headphones" style="color:var(--accent);"></i>
-                <span id="previewAudioLabel" style="font-size:0.85rem; color:var(--text-secondary);">Прослушивание...</span>
-                <button onclick="stopPreviewAudio()" style="margin-left:auto; background:transparent; border:1px solid var(--border); color:var(--text-muted); border-radius:6px; padding:4px 10px; font-size:0.75rem; cursor:pointer;">Остановить</button>
+                <span id="previewAudioLabel" style="font-size:0.85rem; color:var(--text-secondary);">${t("player.listening")}</span>
+                <button onclick="stopPreviewAudio()" style="margin-left:auto; background:transparent; border:1px solid var(--border); color:var(--text-muted); border-radius:6px; padding:4px 10px; font-size:0.75rem; cursor:pointer;">${t("player.stop_preview")}</button>
             </div>
             <audio id="previewAudioEl" controls style="width:100%; height:40px;"></audio>
         `;
@@ -513,7 +513,7 @@ async function previewAudioTrack(btn) {
 
     // Visual feedback on button
     btn.disabled = true;
-    btn.innerHTML = '<span style="display:inline-block; width:12px; height:12px; border:2px solid rgba(255,255,255,0.3); border-top-color:var(--accent); border-radius:50%; animation:spin 0.6s linear infinite;"></span> Загрузка...';
+    btn.innerHTML = `<span style="display:inline-block; width:12px; height:12px; border:2px solid rgba(255,255,255,0.3); border-top-color:var(--accent); border-radius:50%; animation:spin 0.6s linear infinite;"></span> ${t("notification.extracting")}`;
 
     try {
         const res = await fetch("/api/extract-audio", {
@@ -523,9 +523,9 @@ async function previewAudioTrack(btn) {
         });
         const data = await res.json();
         if (!res.ok || data.error) {
-            showNotification(data.error || "Ошибка извлечения", "error");
+            showNotification(data.error || t("notification.extract_error"), "error");
             btn.disabled = false;
-            btn.innerHTML = '<i class="bi bi-headphones"></i> Прослушать';
+            btn.innerHTML = `<i class="bi bi-headphones"></i> ${t("player.listen")}`;
             return;
         }
 
@@ -537,7 +537,7 @@ async function previewAudioTrack(btn) {
         playerDiv.style.display = "block";
         audioEl.src = data.audio_url;
         audioEl.play();
-        label.textContent = `Дорожка #${trackId}`;
+        label.textContent = t("notification.track_label", { id: trackId });
 
         currentPreviewAudio = audioEl;
         currentPreviewTrackId = trackId;
@@ -549,13 +549,13 @@ async function previewAudioTrack(btn) {
 
         // Reset button
         btn.disabled = false;
-        btn.innerHTML = '<i class="bi bi-stop-fill"></i> Играет';
+        btn.innerHTML = `<i class="bi bi-stop-fill"></i> ${t("notification.playing")}`;
         btn.onclick = () => { stopPreviewAudio(); };
 
     } catch (e) {
-        showNotification("Ошибка: " + e.message, "error");
+        showNotification(t("notification.error_prefix") + e.message, "error");
         btn.disabled = false;
-        btn.innerHTML = '<i class="bi bi-headphones"></i> Прослушать';
+        btn.innerHTML = `<i class="bi bi-headphones"></i> ${t("player.listen")}`;
     }
 }
 
@@ -574,7 +574,7 @@ function stopPreviewAudio() {
         const previewBtn = r.querySelector('button[onclick*="previewAudioTrack"], button[onclick*="stopPreviewAudio"]');
         if (previewBtn) {
             previewBtn.disabled = false;
-            previewBtn.innerHTML = '<i class="bi bi-headphones"></i> Прослушать';
+            previewBtn.innerHTML = `<i class="bi bi-headphones"></i> ${t("player.listen")}`;
             previewBtn.onclick = function() { previewAudioTrack(this); };
         }
     });
@@ -592,10 +592,10 @@ async function remuxAndPlay(btn) {
 
     btn.disabled = true;
     const origHtml = btn.innerHTML;
-    btn.innerHTML = '<span style="display:inline-block; width:12px; height:12px; border:2px solid rgba(255,255,255,0.3); border-top-color:var(--accent); border-radius:50%; animation:spin 0.6s linear infinite;"></span> Ремикс...';
+    btn.innerHTML = `<span style="display:inline-block; width:12px; height:12px; border:2px solid rgba(255,255,255,0.3); border-top-color:var(--accent); border-radius:50%; animation:spin 0.6s linear infinite;"></span> ${t("player.remuxing")}`;
 
     try {
-        showNotification("Подготовка видео...", "info");
+        showNotification(t("player.preparing"), "info");
         const res = await fetch("/api/remux-video", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -603,7 +603,7 @@ async function remuxAndPlay(btn) {
         });
         const data = await res.json();
         if (!res.ok || data.error) {
-            showNotification(data.error || "Ошибка ремикса", "error");
+            showNotification(data.error || t("player.remux_error"), "error");
             btn.disabled = false;
             btn.innerHTML = origHtml;
             return;
@@ -614,7 +614,7 @@ async function remuxAndPlay(btn) {
         video.src = data.video_url;
         video.load();
         video.play();
-        showNotification("Видео готово", "success");
+        showNotification(t("player.video_ready"), "success");
 
         // Highlight active track
         document.querySelectorAll('.track-row').forEach(r => r.style.background = '');
@@ -622,7 +622,7 @@ async function remuxAndPlay(btn) {
         if (row) row.style.background = 'rgba(234,88,12,0.1)';
 
     } catch (e) {
-        showNotification("Ошибка: " + e.message, "error");
+        showNotification(t("notification.error_prefix") + e.message, "error");
     } finally {
         btn.disabled = false;
         btn.innerHTML = origHtml;
@@ -638,12 +638,12 @@ async function applyBulkDefault(btn) {
     const noSubsCheck = document.getElementById('bulkNoSubs');
 
     if (!audioRadio && !subsRadio && !(noSubsCheck && noSubsCheck.checked)) {
-        showNotification("Выберите дорожку или опцию", "warning");
+        showNotification(t("player.select_track"), "warning");
         return;
     }
 
     btn.disabled = true;
-    btn.innerHTML = '<span style="display:inline-block; width:12px; height:12px; border:2px solid rgba(255,255,255,0.3); border-top-color:var(--accent); border-radius:50%; animation:spin 0.6s linear infinite;"></span> Применяю...';
+    btn.innerHTML = `<span style="display:inline-block; width:12px; height:12px; border:2px solid rgba(255,255,255,0.3); border-top-color:var(--accent); border-radius:50%; animation:spin 0.6s linear infinite;"></span> ${t("player.applying")}`;
 
     let totalProcessed = 0, totalSkipped = 0, totalErrors = 0;
 
@@ -657,7 +657,7 @@ async function applyBulkDefault(btn) {
             });
             const data = await res.json();
             if (!res.ok || data.error) {
-                showNotification("Аудио: " + (data.error || "Ошибка"), "error");
+                showNotification(t("player.audio") + ": " + (data.error || t("notification.error_prefix").trim()), "error");
             } else {
                 totalProcessed += data.processed;
                 totalSkipped += data.skipped;
@@ -674,7 +674,7 @@ async function applyBulkDefault(btn) {
             });
             const data = await res.json();
             if (!res.ok || data.error) {
-                showNotification("Субтитры: " + (data.error || "Ошибка"), "error");
+                showNotification(t("player.subs") + ": " + (data.error || t("notification.error_prefix").trim()), "error");
             } else {
                 totalProcessed += data.processed;
                 totalSkipped += data.skipped;
@@ -690,7 +690,7 @@ async function applyBulkDefault(btn) {
             });
             const data = await res.json();
             if (!res.ok || data.error) {
-                showNotification("Субтитры: " + (data.error || "Ошибка"), "error");
+                showNotification(t("player.subs") + ": " + (data.error || t("notification.error_prefix").trim()), "error");
             } else {
                 totalProcessed += data.processed;
                 totalSkipped += data.skipped;
@@ -698,17 +698,17 @@ async function applyBulkDefault(btn) {
             }
         }
 
-        const parts = [`Готово: ${totalProcessed}`];
-        if (totalSkipped > 0) parts.push(`пропущено: ${totalSkipped}`);
-        if (totalErrors > 0) parts.push(`ошибок: ${totalErrors}`);
+        const parts = [t("notification.done", { count: totalProcessed })];
+        if (totalSkipped > 0) parts.push(t("notification.skipped", { count: totalSkipped }));
+        if (totalErrors > 0) parts.push(t("notification.errors_count", { count: totalErrors }));
         showNotification(parts.join(", "), totalErrors > 0 ? "warning" : "success");
 
         if (currentVideoPath) await loadTrackInfo(currentVideoPath);
     } catch (e) {
-        showNotification("Ошибка: " + e.message, "error");
+        showNotification(t("notification.error_prefix") + e.message, "error");
     } finally {
         btn.disabled = false;
-        btn.innerHTML = '<i class="bi bi-layers"></i> Применить ко всем файлам в папке';
+        btn.innerHTML = `<i class="bi bi-layers"></i> ${t("player.bulk_apply")}`;
     }
 }
 
@@ -728,13 +728,13 @@ async function setDefaultTrack(filepath, trackId, trackType) {
         });
         const data = await res.json();
         if (!res.ok || data.error) {
-            showNotification(data.error || "Ошибка", "error");
+            showNotification(data.error || t("notification.error_prefix").trim(), "error");
             return;
         }
-        showNotification("Дефолтная дорожка изменена", "success");
+        showNotification(t("notification.default_changed"), "success");
         // Reload track info
         await loadTrackInfo(filepath);
-    } catch (e) { showNotification("Ошибка: " + e.message, "error"); }
+    } catch (e) { showNotification(t("notification.error_prefix") + e.message, "error"); }
 }
 
 async function setDefaultTrackBulk(btn) {
@@ -762,22 +762,22 @@ async function setDefaultTrackBulk(btn) {
         });
         const data = await res.json();
         if (!res.ok || data.error) {
-            showNotification(data.error || "Ошибка", "error");
+            showNotification(data.error || t("notification.error_prefix").trim(), "error");
             btn.disabled = false;
-            btn.innerHTML = '<i class="bi bi-layers"></i> Для всех';
+            btn.innerHTML = `<i class="bi bi-layers"></i> ${t("player.bulk_apply")}`;
             return;
         }
-        const parts = [`Изменено: ${data.processed}`];
-        if (data.skipped > 0) parts.push(`пропущено: ${data.skipped}`);
-        if (data.errors > 0) parts.push(`ошибок: ${data.errors}`);
+        const parts = [t("notification.changed", { count: data.processed })];
+        if (data.skipped > 0) parts.push(t("notification.skipped", { count: data.skipped }));
+        if (data.errors > 0) parts.push(t("notification.errors_count", { count: data.errors }));
         showNotification(parts.join(", "), data.errors > 0 ? "warning" : "success");
         // Reload current file track info
         if (currentVideoPath) await loadTrackInfo(currentVideoPath);
     } catch (e) {
-        showNotification("Ошибка: " + e.message, "error");
+        showNotification(t("notification.error_prefix") + e.message, "error");
     } finally {
         btn.disabled = false;
-        btn.innerHTML = '<i class="bi bi-layers"></i> Для всех';
+        btn.innerHTML = `<i class="bi bi-layers"></i> ${t("player.bulk_apply")}`;
     }
 }
 

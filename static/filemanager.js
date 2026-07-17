@@ -35,7 +35,7 @@ async function fmLoad(path) {
     document.getElementById("fmSelectBtn").disabled = false;
 
     const el = document.getElementById("fmContents");
-    el.innerHTML = '<div style="text-align:center; padding:40px;"><div style="display:inline-block; width:24px; height:24px; border:2px solid rgba(255,255,255,0.2); border-top-color:var(--accent); border-radius:50%; animation:spin 0.6s linear infinite;"></div> <span style="margin-left:8px; color:var(--text-muted);">Загрузка...</span></div>';
+    el.innerHTML = `<div style="text-align:center; padding:40px;"><div style="display:inline-block; width:24px; height:24px; border:2px solid rgba(255,255,255,0.2); border-top-color:var(--accent); border-radius:50%; animation:spin 0.6s linear infinite;"></div> <span style="margin-left:8px; color:var(--text-muted);">${t("fm.loading")}</span></div>`;
 
     if (!document.getElementById("fm-spinner-style")) {
         const style = document.createElement("style");
@@ -83,12 +83,12 @@ async function fmLoad(path) {
         }
 
         if (!data.items.length && !data.parent) {
-            html = '<div style="text-align:center; padding:40px; color:var(--text-muted);"><i class="bi bi-folder2" style="font-size:24px; display:block; margin-bottom:8px;"></i>Папка пуста</div>';
+            html = `<div style="text-align:center; padding:40px; color:var(--text-muted);"><i class="bi bi-folder2" style="font-size:24px; display:block; margin-bottom:8px;"></i>${t("fm.empty")}</div>`;
         }
 
         el.innerHTML = html;
     } catch (e) {
-        el.innerHTML = `<div style="padding:24px; color:var(--danger); text-align:center;"><i class="bi bi-wifi-off"></i> Ошибка загрузки: ${escapeHtml(e.message)}</div>`;
+        el.innerHTML = `<div style="padding:24px; color:var(--danger); text-align:center;"><i class="bi bi-wifi-off"></i> ${t("fm.load_error")}${escapeHtml(e.message)}</div>`;
     }
 }
 
@@ -111,7 +111,7 @@ function fmSelect() {
 }
 
 async function fmCreateFolder() {
-    const name = prompt("Имя нового каталога:", "");
+    const name = prompt(t("fm.folder_name"), "");
     if (!name || !name.trim()) return;
 
     // Sanitize
@@ -129,14 +129,14 @@ async function fmCreateFolder() {
         const data = await res.json();
 
         if (!res.ok || data.error) {
-            alert("Ошибка: " + (data.error || "Не удалось создать каталог"));
+            alert(t("notification.error_prefix") + (data.error || t("fm.create_error")));
             return;
         }
 
         // Reload current directory to show the new folder
         fmLoad(fmCurrentPath);
     } catch (e) {
-        alert("Ошибка сети: " + e.message);
+        alert(t("fm.network_error") + e.message);
     }
 }
 

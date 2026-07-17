@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -85,7 +85,7 @@
         .track-item input[type="checkbox"] { accent-color: var(--accent); width: 16px; height: 16px; }
         .track-item input[type="radio"] { accent-color: var(--accent); width: 16px; height: 16px; }
         .track-item input[type="radio"]:disabled { opacity: 0.3; }
-        .track-item:has(input[type="checkbox"]:not(:checked)) label:last-child { opacity: 0.4; pointer-events: none; }
+        .track-item:has(input[type="radio"]):has(input[type="checkbox"]:not(:checked)) label:last-child { opacity: 0.4; pointer-events: none; }
         .track-item .size { font-size: 0.75rem; color: var(--text-muted); }
         .actions { display: flex; gap: 12px; margin-bottom: 24px; }
         .btn-action { height: 48px; padding: 0 28px; border: none; border-radius: var(--radius-sm); font-family: inherit; font-size: 0.95rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: all 0.2s var(--transition); }
@@ -197,62 +197,82 @@
         .shimmer { background: linear-gradient(90deg, rgba(255,255,255,0.03) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.03) 75%); background-size: 200% 100%; animation: shimmer-bg 1.5s infinite; border-radius: 6px; }
         @keyframes shimmer-bg { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
         .shimmer-row { height: 36px; margin-bottom: 6px; border-radius: 6px; }
+
+        /* Language selector */
+        .lang-wrap { display: flex; align-items: center; gap: 8px; margin-right: 16px; }
+        .lang-wrap .bi-globe2 { color: var(--text-muted); font-size: 1.1rem; }
+        .lang-select { height: 32px; padding: 0 28px 0 10px; background: var(--bg-input); border: 1px solid var(--border); border-radius: 6px; color: var(--text-secondary); font-family: inherit; font-size: 0.8rem; cursor: pointer; appearance: none; outline: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394A3B8' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 8px center; }
+        .lang-select:focus { border-color: var(--accent); }
     </style>
 </head>
 <body>
 <div class="app-container">
     <header class="app-header">
         <div class="logo-icon"><img src="/static/favicon.svg" alt="MKVCombine" width="32" height="32"></div>
-        <div><h1>MKVCombine</h1><div class="subtitle">Объединение MKV видео с аудиодорожками и субтитрами</div></div>
-        <div style="margin-left:auto;"><span id="statusBadge" class="status-badge idle"><i class="bi bi-circle-fill" style="font-size:6px;"></i> Ожидание</span></div>
+        <div><h1>MKVCombine</h1><div class="subtitle" data-i18n="app.subtitle">Merge MKV videos with audio tracks and subtitles</div></div>
+        <div style="margin-left:auto; display:flex; align-items:center; gap:12px;">
+            <div class="lang-wrap">
+                <i class="bi bi-globe2"></i>
+                <select id="langSelect" class="lang-select" onchange="setLang(this.value)">
+                    <option value="en">EN</option>
+                    <option value="ru">RU</option>
+                    <option value="de">DE</option>
+                    <option value="es">ES</option>
+                    <option value="fr">FR</option>
+                    <option value="ja">JA</option>
+                    <option value="zh">ZH</option>
+                </select>
+            </div>
+            <span id="statusBadge" class="status-badge idle"><i class="bi bi-circle-fill" style="font-size:6px;"></i> <span data-i18n="status.idle">Idle</span></span>
+        </div>
     </header>
 
     <!-- Settings -->
     <div class="section glass">
-        <div class="section-header" style="cursor:default;"><div class="icon"><i class="bi bi-folder2-open"></i></div><span class="title">Каталог сериала</span></div>
+        <div class="section-header" style="cursor:default;"><div class="icon"><i class="bi bi-folder2-open"></i></div><span class="title" data-i18n="scan.section">Serial Directory</span></div>
         <div class="section-body">
             <div class="form-group">
-                <label class="form-label">Путь к каталогу сериала</label>
+                <label class="form-label" data-i18n="scan.dir_label">Path to serial directory</label>
                 <div class="input-wrap">
                     <input type="text" class="form-input" id="serialDir" placeholder="/video/Hellsing (2006) [BDRemux 1080p]" readonly>
-                    <button class="btn-browse" onclick="openFileManager('serialDir')" aria-label="Обзор каталога"><i class="bi bi-folder2-open"></i> Обзор</button>
-                    <button class="btn-scan" id="btnScan" onclick="scanDirectory()"><i class="bi bi-search"></i> Сканировать</button>
+                    <button class="btn-browse" onclick="openFileManager('serialDir')" data-i18n-aria="scan.browse_aria" aria-label="Browse directory"><i class="bi bi-folder2-open"></i> <span data-i18n="scan.browse">Browse</span></button>
+                    <button class="btn-scan" id="btnScan" onclick="scanDirectory()"><i class="bi bi-search"></i> <span data-i18n="scan.scan_btn">Scan</span></button>
                 </div>
-                <div class="form-hint">Выберите каталог сериала — видео, аудио и субтитры будут найдены автоматически</div>
+                <div class="form-hint" data-i18n="scan.dir_hint">Select a directory — video, audio and subtitles will be found automatically</div>
             </div>
             <div id="scanPreview" style="display:none;">
                 <div class="scan-summary" id="scanSummary"></div>
                 <div class="scan-dub-list" id="scanDubs"></div>
                 <!-- Track selection -->
                 <div class="track-select" id="audioSelect" style="display:none;">
-                    <h4><i class="bi bi-music-note-beamed"></i> Аудиодорожки</h4>
+                    <h4><i class="bi bi-music-note-beamed"></i> <span data-i18n="scan.audio_tracks">Audio Tracks</span></h4>
                     <div id="audioCheckboxes"></div>
                 </div>
                 <div class="track-select" id="subsSelect" style="display:none;">
-                    <h4><i class="bi bi-card-text"></i> Субтитры</h4>
+                    <h4><i class="bi bi-card-text"></i> <span data-i18n="scan.subs_tracks">Subtitles</span></h4>
                     <div id="subsCheckboxes"></div>
                 </div>
                 <div class="scan-preview" id="scanList"></div>
             </div>
             <div class="form-group" style="margin-top:18px;">
-                <label class="form-label">Каталог для вывода</label>
+                <label class="form-label" data-i18n="scan.output_label">Output directory</label>
                 <div class="input-wrap">
                     <input type="text" class="form-input" id="outputDir" placeholder="/video/Hellsing (2006) [BDRemux 1080p]/output">
-                    <button class="btn-browse" onclick="openFileManager('outputDir')" aria-label="Обзор каталога вывода"><i class="bi bi-folder2-open"></i> Обзор</button>
+                    <button class="btn-browse" onclick="openFileManager('outputDir')" data-i18n-aria="scan.output_browse_aria" aria-label="Browse output directory"><i class="bi bi-folder2-open"></i> <span data-i18n="scan.browse">Browse</span></button>
                 </div>
-                <div class="form-hint">Можно ввести путь вручную — каталог будет создан автоматически</div>
+                <div class="form-hint" data-i18n="scan.output_hint">Enter path manually — directory will be created automatically</div>
             </div>
             <div class="toggle-row">
                 <label class="toggle"><input type="checkbox" id="overwrite"><span class="toggle-track"></span></label>
-                <div><div class="toggle-label">Перезаписать исходные файлы</div><div class="toggle-desc">Если выключено — результат сохраняется в папку вывода</div></div>
+                <div><div class="toggle-label" data-i18n="scan.overwrite">Overwrite source files</div><div class="toggle-desc" data-i18n="scan.overwrite_desc">If disabled — result saved to output folder</div></div>
             </div>
         </div>
     </div>
 
     <!-- Controls -->
     <div class="actions">
-        <button id="btnStart" class="btn-action btn-primary" onclick="startProcessing()"><i class="bi bi-play-fill"></i> Начать обработку</button>
-        <button id="btnStop" class="btn-action btn-stop" onclick="stopProcessing()" disabled><i class="bi bi-stop-fill"></i> Остановить</button>
+        <button id="btnStart" class="btn-action btn-primary" onclick="startProcessing()"><i class="bi bi-play-fill"></i> <span data-i18n="controls.start">Start Processing</span></button>
+        <button id="btnStop" class="btn-action btn-stop" onclick="stopProcessing()" disabled><i class="bi bi-stop-fill"></i> <span data-i18n="controls.stop">Stop</span></button>
     </div>
 
     <!-- Progress -->
@@ -265,9 +285,9 @@
             <div class="progress-track"><div class="progress-fill" id="progressBar" style="width:0%"></div></div>
             <div class="progress-percent" id="progressPercent">0%</div>
             <div class="stat-row">
-                <div class="stat-card"><div class="stat-number" style="color:var(--success);" id="statSuccess">0</div><div class="stat-label"><i class="bi bi-check-circle"></i> Успешно</div></div>
-                <div class="stat-card"><div class="stat-number" style="color:var(--warning);" id="statWarnings">0</div><div class="stat-label"><i class="bi bi-exclamation-triangle"></i> Предупреждения</div></div>
-                <div class="stat-card"><div class="stat-number" style="color:var(--danger);" id="statErrors">0</div><div class="stat-label"><i class="bi bi-x-circle"></i> Ошибки</div></div>
+                <div class="stat-card"><div class="stat-number" style="color:var(--success);" id="statSuccess">0</div><div class="stat-label"><i class="bi bi-check-circle"></i> <span data-i18n="progress.success">Success</span></div></div>
+                <div class="stat-card"><div class="stat-number" style="color:var(--warning);" id="statWarnings">0</div><div class="stat-label"><i class="bi bi-exclamation-triangle"></i> <span data-i18n="progress.warnings">Warnings</span></div></div>
+                <div class="stat-card"><div class="stat-number" style="color:var(--danger);" id="statErrors">0</div><div class="stat-label"><i class="bi bi-x-circle"></i> <span data-i18n="progress.errors">Errors</span></div></div>
             </div>
         </div>
     </div>
@@ -276,26 +296,26 @@
     <div class="section glass player-section">
         <div class="section-header" data-bs-toggle="collapse" data-bs-target="#playerSection">
             <div class="icon"><i class="bi bi-play-circle"></i></div>
-            <span class="title">Видеоплеер</span>
+            <span class="title" data-i18n="player.section">Video Player</span>
             <i class="bi bi-chevron-down chevron"></i>
         </div>
         <div class="collapse" id="playerSection">
             <div class="player-container">
                 <div class="form-group">
-                    <label class="form-label">Каталог с MKV файлами</label>
+                    <label class="form-label" data-i18n="player.dir_label">Directory with MKV files</label>
                     <div class="input-wrap">
                         <input type="text" class="form-input" id="playerDir" placeholder="/video">
-                        <button class="btn-browse" onclick="openFileManager('playerDir')" aria-label="Обзор каталога"><i class="bi bi-folder2-open"></i> Обзор</button>
-                        <button class="btn-browse" onclick="loadPlayerFiles()" aria-label="Обновить список файлов"><i class="bi bi-arrow-clockwise"></i> Обновить</button>
+                        <button class="btn-browse" onclick="openFileManager('playerDir')" data-i18n-aria="player.browse_aria" aria-label="Browse directory"><i class="bi bi-folder2-open"></i> <span data-i18n="scan.browse">Browse</span></button>
+                        <button class="btn-browse" onclick="loadPlayerFiles()" data-i18n-aria="player.refresh_aria" aria-label="Refresh file list"><i class="bi bi-arrow-clockwise"></i> <span data-i18n="player.refresh">Refresh</span></button>
                     </div>
-                    <div class="form-hint">Можно выбрать любой каталог с MKV — исходники из Serials или готовые из output</div>
+                    <div class="form-hint" data-i18n="player.dir_hint">Select any directory with MKV — originals from Serials or finished from output</div>
                 </div>
                 <div class="file-list" id="playerFileList"></div>
                 <div id="playerWrap" style="display:none;">
                     <div class="player-wrap"><video id="playerVideo" controls crossorigin="*"></video></div>
-                    <div class="track-panel" id="trackPanel"><h4><i class="bi bi-sliders"></i> Дорожки</h4><div id="trackList"></div></div>
+                    <div class="track-panel" id="trackPanel"><h4><i class="bi bi-sliders"></i> <span data-i18n="player.tracks">Tracks</span></h4><div id="trackList"></div></div>
                 </div>
-                <div class="empty-player" id="emptyPlayer"><i class="bi bi-film"></i>Выберите файл для просмотра</div>
+                <div class="empty-player" id="emptyPlayer"><i class="bi bi-film"></i><span data-i18n="player.select_file">Select a file to view</span></div>
             </div>
         </div>
     </div>
@@ -303,32 +323,34 @@
     <!-- Logs -->
     <div class="section glass">
         <div class="log-header">
-            <span class="title"><i class="bi bi-journal-text"></i> Логи</span>
-            <select id="logSession" class="log-select" onchange="loadLog()"><option value="">— текущая сессия —</option></select>
+            <span class="title"><i class="bi bi-journal-text"></i> <span data-i18n="logs.section">Logs</span></span>
+            <select id="logSession" class="log-select" onchange="loadLog()"><option value="" data-i18n="logs.current_session">— current session —</option></select>
         </div>
-        <div id="logArea" class="log-area">Логи появятся после начала обработки...</div>
+        <div id="logArea" class="log-area" data-i18n="logs.waiting">Logs will appear after processing starts...</div>
     </div>
 </div>
 
 <!-- File Manager Modal -->
 <div class="modal-overlay" id="fileManagerModal">
     <div class="modal-box">
-        <div class="modal-top"><i class="bi bi-folder2" style="color:var(--accent);"></i><span class="title">Файловый менеджер</span><button class="modal-close" onclick="closeFileManager()" aria-label="Закрыть"><i class="bi bi-x-lg"></i></button></div>
+        <div class="modal-top"><i class="bi bi-folder2" style="color:var(--accent);"></i><span class="title" data-i18n="fm.title">File Manager</span><button class="modal-close" onclick="closeFileManager()" data-i18n-aria="fm.close" aria-label="Close"><i class="bi bi-x-lg"></i></button></div>
         <div class="fm-pathbar">
-            <button class="btn-browse" onclick="fmGoUp()" aria-label="На уровень выше" style="height:30px; padding:0 10px; font-size:0.78rem;"><i class="bi bi-arrow-up"></i></button>
+            <button class="btn-browse" onclick="fmGoUp()" data-i18n-aria="fm.go_up" aria-label="Go up one level" style="height:30px; padding:0 10px; font-size:0.78rem;"><i class="bi bi-arrow-up"></i></button>
             <span class="path" id="fmCurrentPath">/</span>
-            <button class="btn-browse" onclick="fmCreateFolder()" aria-label="Создать каталог" style="height:30px; padding:0 10px; font-size:0.78rem; color:var(--success);"><i class="bi bi-folder-plus"></i></button>
+            <button class="btn-browse" onclick="fmCreateFolder()" data-i18n-aria="fm.create_folder" aria-label="Create folder" style="height:30px; padding:0 10px; font-size:0.78rem; color:var(--success);"><i class="bi bi-folder-plus"></i></button>
         </div>
-        <div class="fm-contents" id="fmContents"><div style="text-align:center; padding:40px; color:var(--text-muted);">Загрузка...</div></div>
+        <div class="fm-contents" id="fmContents"><div style="text-align:center; padding:40px; color:var(--text-muted);" data-i18n="fm.loading">Loading...</div></div>
         <div class="modal-bottom">
-            <button class="btn-modal btn-modal-ghost" onclick="closeFileManager()">Отмена</button>
-            <button class="btn-modal btn-modal-primary" id="fmSelectBtn" onclick="fmSelect()" disabled><i class="bi bi-check2"></i> Выбрать</button>
+            <button class="btn-modal btn-modal-ghost" onclick="closeFileManager()" data-i18n="fm.cancel">Cancel</button>
+            <button class="btn-modal btn-modal-primary" id="fmSelectBtn" onclick="fmSelect()" disabled><i class="bi bi-check2"></i> <span data-i18n="fm.select">Select</span></button>
         </div>
     </div>
 </div>
 
 <script src="https://cdn.plyr.io/3.7.8/plyr.polyfilled.js"></script>
+<script src="/static/i18n.js"></script>
 <script src="/static/filemanager.js"></script>
 <script src="/static/script.js"></script>
+<script>initLang();</script>
 </body>
 </html>
