@@ -16,6 +16,14 @@ async function scanDirectory() {
     btn.disabled = true;
     btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Сканирование...';
 
+    // Show shimmer placeholders
+    const preview = document.getElementById("scanPreview");
+    preview.style.display = "block";
+    document.getElementById("scanList").innerHTML =
+        '<div class="shimmer shimmer-row"></div>'.repeat(5);
+    document.getElementById("scanSummary").innerHTML = '';
+    document.getElementById("scanDubs").innerHTML = '';
+
     try {
         const res = await fetch("/api/scan", {
             method: "POST",
@@ -264,9 +272,10 @@ async function loadLog() {
 }
 function formatLog(text) {
     return text.split("\n").map(line => {
-        if (line.includes("[SUCCESS]")) return `<div class="log-success">${escapeHtml(line)}</div>`;
-        if (line.includes("[WARNING]")) return `<div class="log-warning">${escapeHtml(line)}</div>`;
-        if (line.includes("[ERROR]")) return `<div class="log-error">${escapeHtml(line)}</div>`;
+        if (line.includes("[SUCCESS]")) return `<div class="log-success"><i class="bi bi-check-circle-fill"></i> ${escapeHtml(line)}</div>`;
+        if (line.includes("[WARNING]")) return `<div class="log-warning"><i class="bi bi-exclamation-triangle-fill"></i> ${escapeHtml(line)}</div>`;
+        if (line.includes("[ERROR]")) return `<div class="log-error"><i class="bi bi-x-circle-fill"></i> ${escapeHtml(line)}</div>`;
+        if (line.includes("[INFO]")) return `<div class="log-info"><i class="bi bi-info-circle"></i> ${escapeHtml(line)}</div>`;
         return `<div class="log-info">${escapeHtml(line)}</div>`;
     }).join("");
 }
@@ -281,6 +290,10 @@ function encodePathForUrl(path) {
 async function loadPlayerFiles() {
     const dir = document.getElementById("playerDir").value.trim();
     if (!dir) { showNotification("Укажите каталог с файлами", "warning"); return; }
+
+    // Show shimmer placeholders
+    document.getElementById("playerFileList").innerHTML =
+        '<div class="shimmer shimmer-row"></div>'.repeat(5);
 
     try {
         const res = await fetch("/api/files", {
